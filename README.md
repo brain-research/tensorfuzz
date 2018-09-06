@@ -21,7 +21,7 @@ export PYTHONPATH="$PYTHONPATH:$HOME/tensorfuzz"
 
 ## The structure of this repository
 
-Broadly speaking, this repesority contains a core fuzzing library, examples of how 
+Broadly speaking, this repository contains a core fuzzing library, examples of how 
 to use the fuzzer, a list of bugs found with the fuzzer, and some utilities.
 
 ### /bugs
