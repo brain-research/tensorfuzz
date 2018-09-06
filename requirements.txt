@@ -1,0 +1,5 @@
+numpy
+absl-py
+tensorflow-gpu==1.6.0
+scipy
+pyflann
