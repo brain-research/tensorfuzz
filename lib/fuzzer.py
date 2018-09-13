@@ -17,6 +17,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from lib.corpus import CorpusElement
+from lib.corpus import InputCorpus
+from lib.corpus import seed_corpus_from_numpy_arrays
+from lib.fuzz_utils import build_fetch_function
 import tensorflow as tf
 
 
@@ -27,33 +30,59 @@ class Fuzzer(object):
 
     def __init__(
         self,
-        corpus,
+        sess,
+        seed_inputs,
+        input_tensors,
+        coverage_tensors,
+        metadata_tensors,
         coverage_function,
         metadata_function,
         objective_function,
         mutation_function,
-        fetch_function,
+        sample_function,
+        threshold,
+        algorithm="kdtree",
     ):
         """Init the class.
 
     Args:
-      corpus: An InputCorpus object.
-      coverage_function: a function that does CorpusElement -> Coverage.
-      metadata_function: a function that does CorpusElement -> Metadata.
+      sess: a TF session
+      seed_inputs: np arrays of initial inputs, to seed the corpus with.
+      input_tensors: TF tensors to which we feed batches of input.
+      coverage_tensors: TF tensors we fetch to get coverage batches.
+      metadata_tensors: TF tensors we fetch to get metadata batches.
+      coverage_function: a function that does coverage batches -> coverage object.
+      metadata_function: a function that does metadata batches -> metadata object.
       objective_function: a function that checks if a CorpusElement satisifies
         the fuzzing objective (e.g. find a NaN, find a misclassification, etc).
-      mutation_function: a function that does CorpusElement -> Metadata.
+      mutation_function: a function that does CorpusElement -> mutated data.
       fetch_function: grabs numpy arrays from the TF runtime using the relevant
-        tensors.
+        tensors, to produce coverage_batches and metadata_batches
     Returns:
       Initialized object.
     """
-        self.corpus = corpus
         self.coverage_function = coverage_function
         self.metadata_function = metadata_function
         self.objective_function = objective_function
         self.mutation_function = mutation_function
-        self.fetch_function = fetch_function
+
+        # create a single fetch function (to sess.run the tensors)
+        self.fetch_function = build_fetch_function(
+            sess,
+            input_tensors,
+            coverage_tensors,
+            metadata_tensors
+        )
+
+        # set up seed corpus
+        seed_corpus = seed_corpus_from_numpy_arrays(
+            seed_inputs,
+            self.coverage_function, self.metadata_function, self.fetch_function
+        )
+        self.corpus = InputCorpus(
+            seed_corpus, sample_function, threshold, algorithm
+        )
+
 
     def loop(self, iterations):
         """Fuzzes a machine learning model in a loop, making *iterations* steps."""

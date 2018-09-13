@@ -24,7 +24,7 @@ import tensorflow as tf
 
 tf.flags.DEFINE_string(
     "checkpoint_dir",
-    "/tmp/nanfuzzer",
+    "/tmp/quantizefuzzer",
     "The overall dir in which we store experiments",
 )
 tf.flags.DEFINE_string(

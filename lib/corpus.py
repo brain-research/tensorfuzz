@@ -33,7 +33,7 @@ class CorpusElement(object):
 
         Args:
           data: a list of numpy arrays representing the mutated data.
-          metadata: arbitrary python object to be used by the fuzzer for e.g.
+          metadata: arbitrary python object to be used by the fuzzer for
             computing the objective function during the fuzzing loop.
           coverage: an arbitrary hashable python object that guides fuzzing process.
           parent: a reference to the CorpusElement this element is a mutation of.
@@ -60,7 +60,9 @@ class CorpusElement(object):
 def seed_corpus_from_numpy_arrays(
     numpy_arrays, coverage_function, metadata_function, fetch_function
 ):
-    """Constructs a seed_corpus given numpy_arrays.
+    """Constructs a starting corpus, given numpy_arrays of inputs,
+    by passing them through the system to produce outputs (i.e. coverage
+    representations)
 
     We only use the first element of the batch that we fetch, because
     we're only trying to create one corpus element, and we may end up
@@ -69,8 +71,8 @@ def seed_corpus_from_numpy_arrays(
     Args:
       numpy_arrays: multiple lists of input_arrays, each list with as many
         arrays as there are input tensors.
-      coverage_function: a function that does CorpusElement -> Coverage.
-      metadata_function: a function that does CorpusElement -> Metadata.
+      coverage_function: a function that does coverage batches -> coverage object.
+      metadata_function: a function that does metadata batches -> metadata object.
       fetch_function: grabs output from tensorflow runtime.
     Returns:
       List of CorpusElements.

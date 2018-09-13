@@ -19,8 +19,6 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 from lib.fuzz_utils import build_fetch_function
-from lib.corpus import InputCorpus
-from lib.corpus import seed_corpus_from_numpy_arrays
 from lib.coverage_functions import raw_logit_coverage_function
 from lib.fuzzer import Fuzzer
 from lib.mutation_functions import do_basic_mutations
@@ -40,7 +38,7 @@ FLAGS = tf.flags.FLAGS
 
 
 def metadata_function(metadata_batches):
-    """Gets the metadata."""
+    """Gets the metadata, for computing the objective function."""
     loss_batch, grad_batch = metadata_batches
     metadata_list = [
         {"loss": loss_batch[idx], "grad": grad_batch[idx]}
@@ -64,6 +62,12 @@ def objective_function(corpus_element):
     return False
 
 
+def mutation_function(elt):
+    """Mutates the element in question."""
+    return do_basic_mutations(
+        elt, FLAGS.mutations_per_corpus_item, a_min=-1000, a_max=1000)
+
+
 # pylint: disable=too-many-locals
 def main(_):
     """Configures and runs the fuzzer."""
@@ -71,42 +75,32 @@ def main(_):
     # Log more
     tf.logging.set_verbosity(tf.logging.INFO)
 
-    coverage_function = raw_logit_coverage_function
+    # Set up initial seed inputs
     target_seed = np.random.uniform(low=0.0, high=1.0, size=(1,))
-    numpy_arrays = [[target_seed]]
+    seed_inputs = [[target_seed]]
 
+    # Specify input, coverage, and metadata tensors
     targets_tensor = tf.placeholder(tf.float32, [64, 1])
     coverage_tensor = tf.identity(targets_tensor)
     loss_batch_tensor, _ = binary_cross_entropy_with_logits(
         tf.zeros_like(targets_tensor), tf.nn.sigmoid(targets_tensor)
     )
     grads_tensor = tf.gradients(loss_batch_tensor, targets_tensor)[0]
-    tensor_map = {
-        "input": [targets_tensor],
-        "coverage": [coverage_tensor],
-        "metadata": [loss_batch_tensor, grads_tensor],
-    }
 
+    # Construct and run fuzzer
     with tf.Session() as sess:
-
-        fetch_function = build_fetch_function(sess, tensor_map)
-        size = FLAGS.mutations_per_corpus_item
-        mutation_function = lambda elt: do_basic_mutations(
-            elt, size, a_min=-1000, a_max=1000
-        )
-        seed_corpus = seed_corpus_from_numpy_arrays(
-            numpy_arrays, coverage_function, metadata_function, fetch_function
-        )
-        corpus = InputCorpus(
-            seed_corpus, uniform_sample_function, FLAGS.ann_threshold, "kdtree"
-        )
         fuzzer = Fuzzer(
-            corpus,
-            coverage_function,
-            metadata_function,
-            objective_function,
-            mutation_function,
-            fetch_function,
+            sess=sess,
+            seed_inputs=seed_inputs,
+            input_tensors=[targets_tensor],
+            coverage_tensors=[coverage_tensor],
+            metadata_tensors=[loss_batch_tensor, grads_tensor],
+            coverage_function=raw_logit_coverage_function,
+            metadata_function=metadata_function,
+            objective_function=objective_function,
+            mutation_function=mutation_function,
+            sample_function=uniform_sample_function,
+            threshold=FLAGS.ann_threshold
         )
         result = fuzzer.loop(FLAGS.total_inputs_to_fuzz)
         if result is not None:

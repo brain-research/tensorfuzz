@@ -32,6 +32,7 @@ def do_basic_mutations(
     mutations_count: Integer representing number of mutations to do in
       parallel.
     constraint: If not None, a constraint on the norm of the total mutation.
+    a_min, a_max: Constraints on the values of the mutated input
 
   Returns:
     A list of batches, the first of which is mutated images and the second of

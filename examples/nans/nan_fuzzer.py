@@ -20,8 +20,6 @@ import random
 import numpy as np
 import tensorflow as tf
 from lib import fuzz_utils
-from lib.corpus import InputCorpus
-from lib.corpus import seed_corpus_from_numpy_arrays
 from lib.coverage_functions import all_logit_coverage_function
 from lib.fuzzer import Fuzzer
 from lib.mutation_functions import do_basic_mutations
@@ -49,6 +47,10 @@ tf.flags.DEFINE_boolean(
 FLAGS = tf.flags.FLAGS
 
 
+if FLAGS.checkpoint_dir is None:
+    raise ValueError('checkpoint_dir flag must be specified')
+
+
 def metadata_function(metadata_batches):
     """Gets the metadata."""
     metadata_list = [
@@ -68,6 +70,12 @@ def objective_function(corpus_element):
     return True
 
 
+def mutation_function(elt):
+    """Mutates the element in question."""
+    return do_basic_mutations(
+        elt, FLAGS.mutations_per_corpus_item)
+
+
 def main(_):
     """Constructs the fuzzer and performs fuzzing."""
 
@@ -78,36 +86,34 @@ def main(_):
         random.seed(FLAGS.seed)
         np.random.seed(FLAGS.seed)
 
-    coverage_function = all_logit_coverage_function
+    # Set up seed images
     image, label = fuzz_utils.basic_mnist_input_corpus(
         choose_randomly=FLAGS.random_seed_corpus
     )
-    numpy_arrays = [[image, label]]
+    seed_inputs = [[image, label]]
 
     with tf.Session() as sess:
+        # Specify input, coverage, and metadata tensors
+        input_tensors, coverage_tensors, metadata_tensors = \
+          fuzz_utils.get_tensors_from_checkpoint(
+              sess, FLAGS.checkpoint_dir
+          )
 
-        tensor_map = fuzz_utils.get_tensors_from_checkpoint(
-            sess, FLAGS.checkpoint_dir
-        )
-
-        fetch_function = fuzz_utils.build_fetch_function(sess, tensor_map)
-
-        size = FLAGS.mutations_per_corpus_item
-        mutation_function = lambda elt: do_basic_mutations(elt, size)
-        seed_corpus = seed_corpus_from_numpy_arrays(
-            numpy_arrays, coverage_function, metadata_function, fetch_function
-        )
-        corpus = InputCorpus(
-            seed_corpus, recent_sample_function, FLAGS.ann_threshold, "kdtree"
-        )
+        # Construct and run fuzzer
         fuzzer = Fuzzer(
-            corpus,
-            coverage_function,
-            metadata_function,
-            objective_function,
-            mutation_function,
-            fetch_function,
+            sess=sess,
+            seed_inputs=seed_inputs,
+            input_tensors=input_tensors,
+            coverage_tensors=coverage_tensors,
+            metadata_tensors=metadata_tensors,
+            coverage_function=all_logit_coverage_function,
+            metadata_function=metadata_function,
+            objective_function=objective_function,
+            mutation_function=mutation_function,
+            sample_function=recent_sample_function,
+            threshold=FLAGS.ann_threshold,
         )
+
         result = fuzzer.loop(FLAGS.total_inputs_to_fuzz)
         if result is not None:
             tf.logging.info("Fuzzing succeeded.")
