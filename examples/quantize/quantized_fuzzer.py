@@ -19,7 +19,7 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 from lib import fuzz_utils
-from lib.coverage_functions import all_logit_coverage_function
+from lib.coverage_functions import sum_coverage_function
 from lib.fuzzer import Fuzzer
 from lib.mutation_functions import do_basic_mutations
 from lib.sample_functions import recent_sample_function
@@ -119,7 +119,7 @@ def main(_):
             input_tensors=input_tensors,
             coverage_tensors=coverage_tensors,
             metadata_tensors=metadata_tensors,
-            coverage_function=all_logit_coverage_function,
+            coverage_function=sum_coverage_function,
             metadata_function=metadata_function,
             objective_function=objective_function,
             mutation_function=mutation_function,

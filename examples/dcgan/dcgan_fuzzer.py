@@ -19,7 +19,7 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 from lib.fuzz_utils import build_fetch_function
-from lib.coverage_functions import raw_logit_coverage_function
+from lib.coverage_functions import raw_coverage_function
 from lib.fuzzer import Fuzzer
 from lib.mutation_functions import do_basic_mutations
 from lib.sample_functions import uniform_sample_function
@@ -95,7 +95,7 @@ def main(_):
             input_tensors=[targets_tensor],
             coverage_tensors=[coverage_tensor],
             metadata_tensors=[loss_batch_tensor, grads_tensor],
-            coverage_function=raw_logit_coverage_function,
+            coverage_function=raw_coverage_function,
             metadata_function=metadata_function,
             objective_function=objective_function,
             mutation_function=mutation_function,

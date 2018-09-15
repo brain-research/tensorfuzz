@@ -19,17 +19,16 @@ from __future__ import print_function
 import numpy as np
 
 
-def all_logit_coverage_function(coverage_batches):
-    """Computes coverage based on the sum of the absolute values of the logits.
+def sum_coverage_function(coverage_batches):
+    """Computes coverage as the sum of the absolute values of coverage_batches.
 
     Args:
         coverage_batches: Numpy arrays containing coverage information pulled from
-          a call to sess.run. In this case, we assume that these correspond to a
-          batch of logits.
+          a call to sess.run.
 
     Returns:
-        A python integer corresponding to the sum of the absolute values of the
-        logits.
+        A list of python integers corresponding to the sum of the absolute
+        values of the entries in coverage_batches.
     """
     coverage_batch = coverage_batches[0]
     coverage_list = []
@@ -40,18 +39,17 @@ def all_logit_coverage_function(coverage_batches):
     return coverage_list
 
 
-def raw_logit_coverage_function(coverage_batches):
-    """The coverage in this case is just the actual logits.
+def raw_coverage_function(coverage_batches):
+    """The coverage in this case is just the actual values of coverage_batches.
 
     This coverage function is intended for use with a nearest neighbor method.
 
     Args:
         coverage_batches: Numpy arrays containing coverage information pulled from
-          a call to sess.run. In this case, we assume that these correspond to a
-          batch of logits.
+          a call to sess.run.
 
     Returns:
-        A numpy array of logits.
+        A list of numpy arrays corresponding to the entries in coverage_batches.
     """
     # For our purpose, we only need the first coverage element
     coverage_batch = coverage_batches[0]
