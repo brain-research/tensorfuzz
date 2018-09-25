@@ -6,11 +6,11 @@ casts those variables to use 16 bits.
 To train this model, execute something like this:
 
 ```
-python examples/quantize/quantized_model.py --checkpoint_dir='/tmp/quantized_checkpoints_2' --training_steps=10000
+python examples/quantize/quantized_model.py --checkpoint_dir='/tmp/quantized_checkpoints' --training_steps=10000
 ```
 
 To fuzz the trained model, execute something like this:
 
 ```
-python examples/quantize/quantized_fuzzer.py --checkpoint_dir=/tmp/quantized_checkpoints_2 --total_inputs_to_fuzz=1000000 --mutations_per_corpus_item=100 --alsologtostderr --output_path=/cns/ok-d/home/augustusodena/fuzzer/plots/quantized_image.png --ann_threshold=1.0 --perturbation_constraint=1.0 --strategy=ann
+python examples/quantize/quantized_fuzzer.py --checkpoint_dir=/tmp/quantized_checkpoints --total_inputs_to_fuzz=1000000 --mutations_per_corpus_item=100 --alsologtostderr --output_path=/cns/ok-d/home/augustusodena/fuzzer/plots/quantized_image.png --ann_threshold=1.0 --perturbation_constraint=1.0 --strategy=ann
 ```

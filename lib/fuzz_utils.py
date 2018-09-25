@@ -150,12 +150,7 @@ def get_tensors_from_checkpoint(sess, checkpoint_dir):
     coverage_tensors = tf.get_collection("coverage_tensors")
     metadata_tensors = tf.get_collection("metadata_tensors")
 
-    tensor_map = {
-        "input": input_tensors,
-        "coverage": coverage_tensors,
-        "metadata": metadata_tensors,
-    }
-    return tensor_map
+    return input_tensors, coverage_tensors, metadata_tensors
 
 
 def fetch_function(
@@ -183,16 +178,16 @@ def fetch_function(
     return coverage_batches, metadata_batches
 
 
-def build_fetch_function(sess, tensor_map):
+def build_fetch_function(sess, input_tensors, coverage_tensors, metadata_tensors):
     """Constructs fetch function given session and tensors."""
 
     def func(input_batches):
         """The fetch function."""
         return fetch_function(
             sess,
-            tensor_map["input"],
-            tensor_map["coverage"],
-            tensor_map["metadata"],
+            input_tensors,
+            coverage_tensors,
+            metadata_tensors,
             input_batches,
         )
 

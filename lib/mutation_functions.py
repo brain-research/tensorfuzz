@@ -32,6 +32,7 @@ def do_basic_mutations(
     mutations_count: Integer representing number of mutations to do in
       parallel.
     constraint: If not None, a constraint on the norm of the total mutation.
+    a_min, a_max: Constraints on the values of the mutated input
 
   Returns:
     A list of batches, the first of which is mutated images and the second of
@@ -45,10 +46,16 @@ def do_basic_mutations(
         image_batch = np.tile(image, [mutations_count, 1, 1, 1])
     else:
         image = corpus_element.data[0]
-        image_batch = np.tile(image, [mutations_count] + list(image.shape))
+        image_batch = np.tile(
+            image,
+            [mutations_count] + list(np.ones_like(image.shape)))
 
-    sigma = 0.2
-    noise = np.random.normal(size=image_batch.shape, scale=sigma)
+    if np.issubdtype(image_batch.dtype, np.floating):
+        sigma = 0.2
+        noise = np.random.normal(size=image_batch.shape, scale=sigma)
+    elif np.issubdtype(image_batch.dtype, np.integer):
+        sigma = 10
+        noise = np.round(np.random.normal(size=image_batch.shape, scale=sigma))
 
     if constraint is not None:
         # (image - original_image) is a single image. it gets broadcast into a batch
@@ -65,9 +72,10 @@ def do_basic_mutations(
     else:
         mutated_image_batch = noise + image_batch
 
-    mutated_image_batch = np.clip(
-        mutated_image_batch, a_min=a_min, a_max=a_max
-    )
+    if a_min is not None or a_max is not None:
+        mutated_image_batch = np.clip(
+            mutated_image_batch, a_min=a_min, a_max=a_max
+        )
 
     if len(corpus_element.data) > 1:
         label_batch = np.tile(label, [mutations_count])
