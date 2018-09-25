@@ -54,7 +54,7 @@ def do_basic_mutations(
         sigma = 0.2
         noise = np.random.normal(size=image_batch.shape, scale=sigma)
     elif np.issubdtype(image_batch.dtype, np.integer):
-        noise = np.random.randint(a_min, a_max+1)
+        noise = np.random.randint(-1, 2, size=image_batch.shape)
 
     if constraint is not None:
         # (image - original_image) is a single image. it gets broadcast into a batch
@@ -71,9 +71,10 @@ def do_basic_mutations(
     else:
         mutated_image_batch = noise + image_batch
 
-    mutated_image_batch = np.clip(
-        mutated_image_batch, a_min=a_min, a_max=a_max
-    )
+    if a_min is not None or a_max is not None:
+        mutated_image_batch = np.clip(
+            mutated_image_batch, a_min=a_min, a_max=a_max
+        )
 
     if len(corpus_element.data) > 1:
         label_batch = np.tile(label, [mutations_count])

@@ -62,7 +62,7 @@ def objective_function(corpus_element):
 def mutation_function(elt):
     """Mutates the element in question."""
     return do_basic_mutations(
-        elt, FLAGS.mutations_per_corpus_item)
+        elt, FLAGS.mutations_per_corpus_item, a_min=None, a_max=None)
 
 
 def main(_):
@@ -77,7 +77,8 @@ def main(_):
 
     # Set up seed inputs
     sz = 16
-    target_seed = np.random.uniform(low=0.0, high=1.0, size=(sz,))
+#    target_seed = np.random.uniform(low=0.0, high=1.0, size=(sz,))
+    target_seed = np.ones(sz, dtype=np.uint32)*4
     seed_inputs = [[target_seed]]
 
     # Specify input, coverage, and metadata tensors
