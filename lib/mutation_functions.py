@@ -54,7 +54,8 @@ def do_basic_mutations(
         sigma = 0.2
         noise = np.random.normal(size=image_batch.shape, scale=sigma)
     elif np.issubdtype(image_batch.dtype, np.integer):
-        noise = np.random.randint(-1, 2, size=image_batch.shape)
+        sigma = 10
+        noise = np.round(np.random.normal(size=image_batch.shape, scale=sigma))
 
     if constraint is not None:
         # (image - original_image) is a single image. it gets broadcast into a batch

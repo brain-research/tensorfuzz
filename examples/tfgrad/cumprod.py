@@ -92,7 +92,7 @@ def main(_):
             sess=sess,
             seed_inputs=seed_inputs,
             input_tensors=[input_tensor],
-            coverage_tensors=[input_tensor],
+            coverage_tensors=grad_tensors,
             metadata_tensors=grad_tensors,
             coverage_function=raw_coverage_function,
             metadata_function=metadata_function,
