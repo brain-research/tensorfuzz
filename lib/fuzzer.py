@@ -116,6 +116,11 @@ class Fuzzer(object):
                     parent,
                 )
                 if self.objective_function(new_element):
+                    tf.logging.info(
+                        "OBJECTIVE SATISFIED: coverage: %s, metadata: %s",
+                        new_element.coverage,
+                        new_element.metadata,
+                    )
                     return new_element
                 self.corpus.maybe_add_to_corpus(new_element)
 
